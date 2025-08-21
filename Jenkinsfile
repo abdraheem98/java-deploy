@@ -2,12 +2,8 @@ pipeline {
     agent any
 
     tools {
-        maven 'maven'    
-        jdk 'jdk17'       
-    }
-
-    environment {
-        NEXUS_CRED = credentials('nexus-admin')   // <-- your Nexus Jenkins credential ID
+        maven 'maven'
+        jdk 'jdk17'
     }
 
     stages {
@@ -42,28 +38,38 @@ pipeline {
 
         stage('Deploy to Nexus') {
             steps {
-                // Write settings.xml with credentials
-                writeFile file: 'settings.xml', text: """
-                <settings>
-                  <servers>
-                    <server>
-                      <id>nexus</id>
-                      <username>${NEXUS_CRED_USR}</username>
-                      <password>${NEXUS_CRED_PSW}</password>
-                    </server>
-                  </servers>
-                </settings>
-                """
+                withCredentials([usernamePassword(credentialsId: 'nexus-admin', usernameVariable: 'NEXUS_USERNAME', passwordVariable: 'NEXUS_PASSWORD')]) {
+                    script {
+                        def settingsXml = """
+<settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0 http://maven.apache.org/xsd/settings-1.0.0.xsd">
+  <servers>
+    <server>
+      <id>nexus-snapshots</id>
+      <username>${NEXUS_USERNAME}</username>
+      <password>${NEXUS_PASSWORD}</password>
+    </server>
+    <server>
+      <id>nexus-releases</id>
+      <username>${NEXUS_USERNAME}</username>
+      <password>${NEXUS_PASSWORD}</password>
+    </server>
+  </servers>
+</settings>
+"""
+                        writeFile file: 'settings.xml', text: settingsXml
+                    }
 
-                // Deploy each module
-                dir('productcatalogue') {
-                    sh 'mvn deploy -s ../settings.xml -DskipTests'
-                }
-                dir('shopfront') {
-                    sh 'mvn deploy -s ../settings.xml -DskipTests'
-                }
-                dir('stockmanager') {
-                    sh 'mvn deploy -s ../settings.xml -DskipTests'
+                    dir('productcatalogue') {
+                        sh 'mvn deploy -s ../settings.xml -DskipTests'
+                    }
+                    dir('shopfront') {
+                        sh 'mvn deploy -s ../settings.xml -DskipTests'
+                    }
+                    dir('stockmanager') {
+                        sh 'mvn deploy -s ../settings.xml -DskipTests'
+                    }
                 }
             }
         }

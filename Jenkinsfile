@@ -2,8 +2,12 @@ pipeline {
     agent any
 
     tools {
-        maven 'maven'
-        jdk 'jdk17'
+        maven 'maven'     // Jenkins Maven tool name
+        jdk 'jdk17'       // Jenkins JDK tool name
+    }
+
+    environment {
+        NEXUS_CRED = credentials('nexus-admin')   // <-- your Nexus Jenkins credential ID
     }
 
     stages {
@@ -33,6 +37,34 @@ pipeline {
                 archiveArtifacts artifacts: 'productcatalogue/target/*.jar', fingerprint: true
                 archiveArtifacts artifacts: 'shopfront/target/*.jar', fingerprint: true
                 archiveArtifacts artifacts: 'stockmanager/target/*.jar', fingerprint: true
+            }
+        }
+
+        stage('Deploy to Nexus') {
+            steps {
+                // Write settings.xml with credentials
+                writeFile file: 'settings.xml', text: """
+                <settings>
+                  <servers>
+                    <server>
+                      <id>nexus</id>
+                      <username>${NEXUS_CRED_USR}</username>
+                      <password>${NEXUS_CRED_PSW}</password>
+                    </server>
+                  </servers>
+                </settings>
+                """
+
+                // Deploy each module
+                dir('productcatalogue') {
+                    sh 'mvn deploy -s ../settings.xml -DskipTests'
+                }
+                dir('shopfront') {
+                    sh 'mvn deploy -s ../settings.xml -DskipTests'
+                }
+                dir('stockmanager') {
+                    sh 'mvn deploy -s ../settings.xml -DskipTests'
+                }
             }
         }
     }

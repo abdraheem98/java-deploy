@@ -10,12 +10,12 @@
     <version>0.0.1-SNAPSHOT</version>
     <packaging>jar</packaging>
 
-    <!-- Use Spring Boot parent for dependency management -->
+    <!-- Spring Boot parent -->
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
         <version>3.2.5</version>
-        <relativePath/> <!-- lookup parent from Maven Central -->
+        <relativePath/>
     </parent>
 
     <properties>
@@ -23,13 +23,26 @@
     </properties>
 
     <dependencies>
-        <!-- Spring Boot Web (REST APIs, Tomcat included) -->
+        <!-- Spring Boot Web (REST APIs, embedded Tomcat) -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
 
-        <!-- Optional: Guice (if you really want Google Guice DI) -->
+        <!-- Actuator for monitoring/health endpoints -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+
+        <!-- Resilience4j (replacement for Netflix Hystrix) -->
+        <dependency>
+            <groupId>io.github.resilience4j</groupId>
+            <artifactId>resilience4j-spring-boot3</artifactId>
+            <version>2.2.0</version>
+        </dependency>
+
+        <!-- Optional: Guice (if you need Google Guice DI) -->
         <dependency>
             <groupId>com.google.inject</groupId>
             <artifactId>guice</artifactId>
@@ -54,7 +67,7 @@
         </plugins>
     </build>
 
-    <!-- Nexus distribution -->
+    <!-- Nexus deployment -->
     <distributionManagement>
         <repository>
             <id>nexus-releases</id>
